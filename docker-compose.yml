@@ -1,0 +1,39 @@
+services:
+
+  # ── MongoDB ────────────────────────────────────────────────────────────────
+  mongo:
+    image: mongo:7
+    container_name: rased-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"          # accès local depuis Compass ou mongosh
+    volumes:
+      - mongo_data:/data/db    # données persistantes entre redémarrages
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Backend FastAPI ────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rased-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env                   # GEMINI_API_KEY, ANTHROPIC_API_KEY, etc.
+    environment:
+      MONGO_URI: mongodb://mongo:27017   # pointe vers le service mongo ci-dessus
+      MONGO_DB_NAME: rased
+      CORS_ORIGINS: "*"
+    depends_on:
+      mongo:
+        condition: service_healthy   # attend que Mongo soit prêt avant de démarrer
+
+volumes:
+  mongo_data:
+    driver: local
