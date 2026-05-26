@@ -25,14 +25,14 @@ services:
     ports:
       - "8000:8000"
     env_file:
-      - .env                   # GEMINI_API_KEY, ANTHROPIC_API_KEY, etc.
+      - .env                   # MONGO_URI, GEMINI_API_KEY, etc. viennent du .env
     environment:
-      MONGO_URI: mongodb://mongo:27017   # pointe vers le service mongo ci-dessus
-      MONGO_DB_NAME: rased
       CORS_ORIGINS: "*"
+      # MONGO_URI est lu depuis .env — ne pas le surcharger ici
+      # pour Atlas, mettre mongodb+srv://... dans .env
     depends_on:
       mongo:
-        condition: service_healthy   # attend que Mongo soit prêt avant de démarrer
+        condition: service_healthy   # ignoré si mongo n'est pas dans le compose
 
 volumes:
   mongo_data:

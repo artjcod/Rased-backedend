@@ -18,16 +18,20 @@ async def init_db():
     is_atlas = "mongodb.net" in settings.mongo_uri or "+srv" in settings.mongo_uri
 
     client_kwargs = {
-        "serverSelectionTimeoutMS": 10000,   # 10s avant d'abandonner
+        "serverSelectionTimeoutMS": 10000,
         "connectTimeoutMS": 10000,
         "socketTimeoutMS": 30000,
     }
 
-    # Atlas requiert TLS ; les options sont dans l'URI +srv, pas besoin de les
-    # répéter, mais on force tlsAllowInvalidCertificates=False pour la sécurité.
     if is_atlas:
-        client_kwargs["tls"] = True
-        client_kwargs["tlsAllowInvalidCertificates"] = False
+        # Utiliser certifi pour les certificats SSL — résout CERTIFICATE_VERIFY_FAILED
+        # sur macOS, Windows et conteneurs Linux sans certificats système complets.
+        try:
+            import certifi
+            client_kwargs["tlsCAFile"] = certifi.where()
+        except ImportError:
+            # certifi absent : laisser Motor utiliser les certificats système
+            client_kwargs["tls"] = True
 
     _client = AsyncIOMotorClient(settings.mongo_uri, **client_kwargs)
 

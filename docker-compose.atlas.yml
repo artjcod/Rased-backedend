@@ -1,0 +1,16 @@
+# docker-compose pour MongoDB Atlas (pas de MongoDB local)
+# Usage : docker-compose -f docker-compose.atlas.yml up --build
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rased-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env          # MONGO_URI=mongodb+srv://... doit être dans .env
+    environment:
+      CORS_ORIGINS: "*"
